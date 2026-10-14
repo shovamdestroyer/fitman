@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables & credentials
+.env
+.env.local
+.env.*.local
+
+# Archives and workspace caches
+_archive_fitai/
+_archive_posemate/
+posemate_orig/
+Fit Sathi/
+test_fitai_*.js
+scratch/
+.system_generated/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Log files
+*.log
+npm-debug.log*
+
+# IDE & Editor files
+.vscode/
+.idea/

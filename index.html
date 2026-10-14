@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FitAI Coach — AI Yoga, Fitness & Nutrition Platform</title>
+  <meta name="description" content="All-in-one mobile-first AI fitness platform featuring live camera yoga pose detection, personalized 7-day workout plans, Mifflin-St Jeor nutrition calculations, and SATHI AI companion.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#10b981">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%230a0d14'/><circle cx='256' cy='256' r='180' fill='none' stroke='%2310e759' stroke-width='40'/></svg>">
+
+  <!-- Critical Baseline Dark Styles -->
+  <style>
+    :root { color-scheme: dark; }
+    html, body {
+      background-color: #0a0d14 !important;
+      color: #f8fafc !important;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+  </style>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/sathi.css">
+
+  <!-- External CDNs for MediaPipe & Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Ambient Animated Background Lights -->
+  <div class="ambient-bg">
+    <div class="ambient-blob-1"></div>
+    <div class="ambient-blob-2"></div>
+  </div>
+
+  <div id="app-root">
+
+    <!-- Top App Header -->
+    <header class="app-header" id="main-header">
+      <div class="brand-wrapper" onclick="App.navigateTo('dashboard')">
+        <div class="brand-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <span class="brand-title">FitAI Coach</span>
+          <span class="brand-badge">Pro</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" id="btn-pwa-install" onclick="App.triggerPWAInstall()" style="display:none; padding:4px 10px; font-size:0.75rem;">
+          📲 Install App
+        </button>
+
+        <div class="user-avatar-pill" onclick="App.navigateTo('profile')">
+          <div class="avatar-circle">✨</div>
+          <span class="avatar-name" id="header-user-name">Athlete</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 1: WELCOME / ONBOARDING LANDING                         -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen active" id="screen-welcome">
+      <div style="text-align:center; padding: 40px 10px 20px 10px;">
+        <div style="display:inline-block; padding: 6px 16px; border-radius: var(--radius-full); background: rgba(16, 231, 89, 0.12); border: 1px solid rgba(16, 231, 89, 0.3); color: var(--accent-lime); font-size: 0.82rem; font-weight: 700; margin-bottom: 16px;">
+          ⚡ NEXT-GEN AI FITNESS & WELLNESS
+        </div>
+        <h1 style="font-size: 2.5rem; line-height: 1.15; margin-bottom: 14px;">
+          Train Smarter With <br><span style="background: linear-gradient(135deg, #10e759, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">FitAI & SATHI</span>
+        </h1>
+        <p style="color: var(--text-secondary); max-width: 580px; margin: 0 auto 28px auto; font-size: 1.05rem;">
+          Live camera yoga pose analysis, deterministic calorie calculations, authentic Indian nutrition plans, and your 24/7 AI wellness buddy.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 0 auto 36px auto;">
+          <button class="btn btn-primary" onclick="App.navigateTo('auth')">
+            Get Started Now
+          </button>
+          <button class="btn btn-secondary" onclick="Auth.startGuestDemoSession(); App.navigateTo('dashboard'); App.showToast('Welcome to FitAI Demo Mode!');">
+            ⚡ Quick Guest Demo
+          </button>
+        </div>
+
+        <div class="grid-3" style="text-align: left; margin-top: 20px;">
+          <div class="glass-card">
+            <div style="font-size: 1.8rem; margin-bottom: 8px;">🧘</div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 6px;">Live Camera Pose AI</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Real MediaPipe landmark angles with voice correction for 40+ yoga poses.</p>
+          </div>
+          <div class="glass-card">
+            <div style="font-size: 1.8rem; margin-bottom: 8px;">🔥</div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 6px;">Scientific Nutrition</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Mifflin-St Jeor BMR/TDEE calculations with Indian meal plans (roti, dal, paneer).</p>
+          </div>
+          <div class="glass-card highlight">
+            <div style="font-size: 1.8rem; margin-bottom: 8px;">✨</div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 6px;">SATHI AI Companion</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Your colorful, futuristic AI wellness buddy answering diet and workout queries.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 2: AUTHENTICATION (LOGIN, SIGNUP, RESET)                -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-auth">
+      <div style="max-width: 440px; margin: 30px auto;">
+        <div class="glass-card" style="padding: 30px 24px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="font-size: 1.6rem; margin-bottom: 6px;">Welcome to FitAI Coach</h2>
+            <p style="color: var(--text-secondary); font-size: 0.88rem;">Secure login to access personalized fitness and SATHI AI</p>
+          </div>
+
+          <!-- Auth Mode Tabs -->
+          <div class="tab-pills" style="justify-content: center; margin-bottom: 22px;">
+            <button class="tab-pill active" id="tab-auth-login" onclick="toggleAuthTab('login')">Sign In</button>
+            <button class="tab-pill" id="tab-auth-signup" onclick="toggleAuthTab('signup')">Create Account</button>
+            <button class="tab-pill" id="tab-auth-reset" onclick="toggleAuthTab('reset')">Reset Password</button>
+          </div>
+
+          <!-- Login / Signup Form -->
+          <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+            <div class="form-group" id="group-auth-name" style="display: none;">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="auth-name" class="form-control" placeholder="Alex Rivera">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="auth-email" class="form-control" placeholder="athlete@fitai.local" required>
+            </div>
+
+            <div class="form-group" id="group-auth-password">
+              <label class="form-label">Password</label>
+              <input type="password" id="auth-password" class="form-control" placeholder="••••••••" minlength="6">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btn-auth-submit" style="margin-top: 10px;">
+              Sign In
+            </button>
+          </form>
+
+          <div style="text-align: center; margin: 20px 0 10px 0; color: var(--text-muted); font-size: 0.8rem;">
+            ── OR INSTANT ACCESS ──
+          </div>
+
+          <button class="btn btn-secondary btn-block" onclick="Auth.startGuestDemoSession(); App.navigateTo('dashboard'); App.showToast('Logged in as Demo Athlete');">
+            ⚡ Continue as Demo User (Instant)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 3: USER ONBOARDING WIZARD                               -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-onboarding">
+      <div style="max-width: 550px; margin: 20px auto;">
+        <div class="glass-card">
+          <div class="section-header">
+            <span class="badge-difficulty diff-beginner" style="margin-bottom: 6px; display: inline-block;">Personalization Wizard</span>
+            <h2 class="section-title">Build Your Fit Profile</h2>
+            <p class="section-subtitle">We tailor your yoga, workouts, and calories to your physiology and preferences.</p>
+          </div>
+
+          <form id="onboarding-form" onsubmit="handleOnboardingSubmit(event)">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Your Name</label>
+                <input type="text" id="ob-name" class="form-control" value="Athlete" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Age</label>
+                <input type="number" id="ob-age" class="form-control" value="26" min="12" max="100" required>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Sex (Physiological)</label>
+                <select id="ob-sex" class="form-control form-select">
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Activity Level</label>
+                <select id="ob-activity" class="form-control form-select">
+                  <option value="sedentary">Sedentary (desk work)</option>
+                  <option value="light">Lightly Active (1-3 days)</option>
+                  <option value="moderate" selected>Moderately Active (3-5 days)</option>
+                  <option value="very_active">Very Active (6-7 days)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Height (cm)</label>
+                <input type="number" id="ob-height" class="form-control" value="175" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Weight (kg)</label>
+                <input type="number" id="ob-weight" class="form-control" value="70" step="0.5" required>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Target Weight (kg)</label>
+                <input type="number" id="ob-target-weight" class="form-control" value="68" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Primary Fitness Goal</label>
+                <select id="ob-goal" class="form-control form-select">
+                  <option value="fat_loss" selected>Fat Loss & Toning</option>
+                  <option value="muscle_gain">Lean Muscle Gain</option>
+                  <option value="flexibility">Flexibility & Yoga</option>
+                  <option value="maintenance">Weight Maintenance</option>
+                  <option value="general_fitness">General Health</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Dietary Preference</label>
+                <select id="ob-diet" class="form-control form-select">
+                  <option value="vegetarian" selected>Vegetarian (Indian)</option>
+                  <option value="vegan">100% Plant-Based Vegan</option>
+                  <option value="eggetarian">Eggetarian</option>
+                  <option value="non_vegetarian">Non-Vegetarian</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Daily Workout Time</label>
+                <select id="ob-duration" class="form-control form-select">
+                  <option value="20">20 minutes</option>
+                  <option value="30" selected>30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">60 minutes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Health Limitations / Notes (Optional)</label>
+              <input type="text" id="ob-limitations" class="form-control" placeholder="e.g. Mild lower back sensitivity in morning">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">
+              Save Profile & Generate My Plan 🚀
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 4: HOME DASHBOARD                                       -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-dashboard">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+          <span style="font-size:0.82rem; color:var(--text-secondary); font-weight:600;">Welcome back</span>
+          <h2 style="font-size:1.6rem;"><span id="dash-user-name">Athlete</span> ✨</h2>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="App.navigateTo('sathi')">
+            ✨ Ask SATHI
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid-2" style="margin-bottom: 20px;">
+        <!-- Calorie Card -->
+        <div class="glass-card highlight" onclick="App.navigateTo('nutrition')">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:700; font-size:0.95rem;">🔥 Daily Calories</span>
+            <span style="font-size:0.75rem; color:var(--accent-lime); font-weight:700;">Target: <span id="dash-cal-target">2,100</span> kcal</span>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; font-family:var(--font-heading); margin-bottom:4px;">
+            <span id="dash-cal-consumed">0</span> <span style="font-size:0.9rem; font-weight:500; color:var(--text-secondary);">/ <span id="dash-cal-remaining">2,100</span> remaining</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill fill-lime" id="dash-cal-bar" style="width: 0%;"></div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-top:14px;" id="dash-macros-row">
+            <div id="dash-macro-protein"></div>
+            <div id="dash-macro-carbs"></div>
+            <div id="dash-macro-fat"></div>
+          </div>
+        </div>
+
+        <!-- Hydration & Weight Card -->
+        <div class="glass-card" onclick="App.navigateTo('water')">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:700; font-size:0.95rem;">💧 Hydration Tracker</span>
+            <span style="font-size:0.75rem; color:var(--accent-teal); font-weight:700;">Goal: <span id="dash-water-target">2,800</span> ml</span>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; font-family:var(--font-heading); margin-bottom:4px;">
+            <span id="dash-water-amount">0 ml</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill fill-blue" id="dash-water-bar" style="width: 0%;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:14px; border-top:1px solid var(--border-subtle); padding-top:10px; font-size:0.8rem;">
+            <div>
+              <span style="color:var(--text-secondary);">Weight:</span>
+              <strong id="dash-weight-current">70 kg</strong>
+            </div>
+            <div>
+              <span style="color:var(--text-secondary);">BMI:</span>
+              <strong id="dash-bmi-val">22.8</strong> <span id="dash-bmi-badge" style="font-size:0.7rem; font-weight:700;">Normal</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's 5 Activities Section -->
+      <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <span class="badge-difficulty diff-beginner" style="margin-bottom:4px; display:inline-block;">Today's Workout</span>
+          <h3 style="font-size:1.25rem;" id="dash-plan-title">Day 1: Full-Body Mobility & Yoga</h3>
+        </div>
+        <button class="btn btn-outline-lime btn-sm" onclick="App.navigateTo('workouts')">View 7-Day Plan</button>
+      </div>
+
+      <div id="dash-today-activities" style="margin-bottom: 24px;">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Analytics Charts Section -->
+      <div class="grid-2">
+        <div class="glass-card">
+          <h4 style="font-size:0.95rem; margin-bottom:12px;">📊 Weight Progress (Last 7 Days)</h4>
+          <canvas id="chart-weight"></canvas>
+        </div>
+        <div class="glass-card">
+          <h4 style="font-size:0.95rem; margin-bottom:12px;">🔥 Weekly Consistency (5 Tasks/Day)</h4>
+          <canvas id="chart-consistency"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 5: LIVE AI YOGA TRACKER & 40 POSES LIBRARY              -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-yoga">
+      <!-- Live Camera View (Hidden until user starts) -->
+      <div id="yoga-camera-view" style="display:none; margin-bottom:24px;">
+        <div class="camera-wrapper">
+          <video id="yoga-video-feed" class="camera-video" playsinline autoplay muted></video>
+          <canvas id="yoga-canvas-feed" class="camera-canvas"></canvas>
+
+          <div class="camera-hud-overlay">
+            <div class="hud-badge status-unknown" id="yoga-hud-status">
+              ● Initializing AI...
+            </div>
+            <div class="hud-badge" id="yoga-hold-timer" style="color:var(--accent-lime);">
+              0s Held
+            </div>
+          </div>
+
+          <div class="camera-feedback-banner" id="yoga-status-banner">
+            <div class="feedback-text" id="yoga-feedback-text">Step into full camera view to begin.</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="PoseTracker.switchCamera()">📷 Switch Camera</button>
+          <button class="btn btn-secondary btn-sm" onclick="PoseTracker.toggleMirror()">🪞 Mirror</button>
+          <button class="btn btn-secondary btn-sm" onclick="PoseTracker.toggleVoice()">🔊 Voice Cue</button>
+          <button class="btn btn-primary btn-sm" style="background:#ef4444; color:#fff;" onclick="App.stopLiveYogaSession()">⏹ End Session</button>
+        </div>
+      </div>
+
+      <!-- Pose Library View -->
+      <div id="yoga-library-view">
+        <div class="section-header">
+          <h2 class="section-title">🧘 AI Yoga Pose Library (40+ Poses)</h2>
+          <p class="section-subtitle">Real-time computer vision posture detection with skeletal landmark alignment.</p>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+          <input type="text" id="yoga-search-input" class="form-control" placeholder="Search by English or Sanskrit name (e.g. Warrior, Vrikshasana)..." oninput="App.renderYogaPoseLibrary('all', this.value)" style="max-width:380px;">
+          <div class="tab-pills" style="margin-bottom:0;">
+            <button class="tab-pill active" onclick="App.renderYogaPoseLibrary('all')">All (40)</button>
+            <button class="tab-pill" onclick="App.renderYogaPoseLibrary('standing')">Standing</button>
+            <button class="tab-pill" onclick="App.renderYogaPoseLibrary('balance')">Balance</button>
+            <button class="tab-pill" onclick="App.renderYogaPoseLibrary('prone')">Prone / Backbends</button>
+            <button class="tab-pill" onclick="App.renderYogaPoseLibrary('seated')">Seated</button>
+            <button class="tab-pill" onclick="App.renderYogaPoseLibrary('inversion')">Inversions</button>
+          </div>
+        </div>
+
+        <div class="grid-3" id="yoga-poses-grid">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 6: 7-DAY WORKOUT PLAN & 20+ FITNESS EXERCISES           -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-workouts">
+      <div class="section-header">
+        <h2 class="section-title">💪 7-Day Workout & Fitness Plan</h2>
+        <p class="section-subtitle">Exactly 5 planned activities per day, tailored to your recovery and strength balance.</p>
+      </div>
+
+      <!-- Day Switcher Pills (Day 1..7) -->
+      <div class="tab-pills" id="workout-day-pills">
+        <button class="tab-pill active" onclick="App.renderWorkoutPlans(1); updateDayPill(this);">Day 1: Mobility</button>
+        <button class="tab-pill" onclick="App.renderWorkoutPlans(2); updateDayPill(this);">Day 2: Lower Body</button>
+        <button class="tab-pill" onclick="App.renderWorkoutPlans(3); updateDayPill(this);">Day 3: Upper Body</button>
+        <button class="tab-pill" onclick="App.renderWorkoutPlans(4); updateDayPill(this);">Day 4: Recovery</button>
+        <button class="tab-pill" onclick="App.renderWorkoutPlans(5); updateDayPill(this);">Day 5: Core & Strength</button>
+        <button class="tab-pill" onclick="App.renderWorkoutPlans(6); updateDayPill(this);">Day 6: Yoga Flow</button>
+        <button class="tab-pill" onclick="App.renderWorkoutPlans(7); updateDayPill(this);">Day 7: Gentle Rest</button>
+      </div>
+
+      <div id="workout-plan-container" style="margin-bottom:30px;">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div class="section-header">
+        <h3 style="font-size:1.2rem;">🏋️ Fitness Exercise Library (20+ Exercises)</h3>
+        <p class="section-subtitle">Calisthenics, functional core, and dumbbell movements with rep instructions.</p>
+      </div>
+      <div class="grid-2" id="fitness-exercises-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 7: NUTRITION, CALORIE CALCULATOR & MEAL PLANNER        -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-nutrition">
+      <div class="section-header">
+        <h2 class="section-title">🥗 Nutrition, Calorie & Meal Engine</h2>
+        <p class="section-subtitle">Clinically validated Mifflin-St Jeor formulas and authentic Indian meal plans.</p>
+      </div>
+
+      <!-- Sub Tabs: Calculator | Meal Plan | Daily Food Log -->
+      <div class="tab-pills">
+        <button class="tab-pill active" onclick="switchNutriTab('calc', this)">🔥 Calorie Calculator</button>
+        <button class="tab-pill" onclick="switchNutriTab('mealplan', this)">🍲 Meal Planner</button>
+        <button class="tab-pill" onclick="switchNutriTab('foodlog', this)">📝 Food Log</button>
+      </div>
+
+      <!-- Tab 1: Calorie Calculator -->
+      <div id="nutri-tab-calc">
+        <div class="grid-2" style="margin-bottom:20px;">
+          <div class="glass-card">
+            <h4 style="font-size:1.05rem; margin-bottom:14px;">Your Physiological Parameters</h4>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Age</label>
+                <input type="number" id="calc-age" class="form-control" onchange="App.calculateAndDisplayNutrition()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Weight (kg)</label>
+                <input type="number" id="calc-weight" class="form-control" step="0.5" onchange="App.calculateAndDisplayNutrition()">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Height (cm)</label>
+                <input type="number" id="calc-height" class="form-control" onchange="App.calculateAndDisplayNutrition()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sex</label>
+                <select id="calc-sex" class="form-control form-select" onchange="App.calculateAndDisplayNutrition()">
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="prefer_not_to_say">Neutral / Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Activity Multiplier</label>
+                <select id="calc-activity" class="form-control form-select" onchange="App.calculateAndDisplayNutrition()">
+                  <option value="sedentary">Sedentary (1.2x)</option>
+                  <option value="light">Lightly Active (1.375x)</option>
+                  <option value="moderate" selected>Moderately Active (1.55x)</option>
+                  <option value="very_active">Very Active (1.725x)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target Goal</label>
+                <select id="calc-goal" class="form-control form-select" onchange="App.calculateAndDisplayNutrition()">
+                  <option value="fat_loss" selected>Fat Loss (-450 kcal)</option>
+                  <option value="muscle_gain">Muscle Gain (+300 kcal)</option>
+                  <option value="maintenance">Maintenance (0 kcal)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card highlight">
+            <h4 style="font-size:1.05rem; margin-bottom:14px; color:var(--accent-lime);">Calculated Metabolic Breakdown</h4>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:0.8rem; color:var(--text-secondary);">Basal Metabolic Rate (BMR):</div>
+              <div style="font-size:1.3rem; font-weight:800;" id="res-bmr">-- kcal</div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:0.8rem; color:var(--text-secondary);">Maintenance (TDEE):</div>
+              <div style="font-size:1.3rem; font-weight:800;" id="res-tdee">-- kcal</div>
+            </div>
+            <div style="margin-bottom:14px; border-top:1px solid var(--border-subtle); padding-top:10px;">
+              <div style="font-size:0.8rem; color:var(--accent-lime); font-weight:700;">Recommended Calorie Target:</div>
+              <div style="font-size:2rem; font-weight:800; color:var(--accent-lime);" id="res-target">-- kcal</div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;" id="res-goal-desc"></p>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; font-size:0.82rem; text-align:center;">
+              <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">Protein</div>
+                <strong id="res-protein">--</strong>
+              </div>
+              <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">Carbs</div>
+                <strong id="res-carbs">--</strong>
+              </div>
+              <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">Fat</div>
+                <strong id="res-fat">--</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Meal Planner -->
+      <div id="nutri-tab-mealplan" style="display:none;">
+        <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+          <button class="btn btn-outline-lime btn-sm" onclick="App.renderMealPlan('vegetarian')">🌱 Indian Veg</button>
+          <button class="btn btn-outline-lime btn-sm" onclick="App.renderMealPlan('vegan')">🥑 Vegan</button>
+          <button class="btn btn-outline-lime btn-sm" onclick="App.renderMealPlan('eggetarian')">🥚 Eggetarian</button>
+          <button class="btn btn-outline-lime btn-sm" onclick="App.renderMealPlan('non_vegetarian')">🍗 Non-Veg</button>
+        </div>
+        <div id="meal-plan-cards">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Tab 3: Food Logger -->
+      <div id="nutri-tab-foodlog" style="display:none;">
+        <div class="glass-card" style="margin-bottom:20px;">
+          <h4 style="font-size:1.05rem; margin-bottom:12px;">Log Food Intake</h4>
+          <div class="grid-3">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Select Food</label>
+              <select id="food-select-db" class="form-control form-select">
+                <option value="">-- Choose from Database --</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Quantity / Servings</label>
+              <input type="number" id="food-quantity-input" class="form-control" value="1" min="0.5" step="0.5">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Meal Timing</label>
+              <select id="food-mealtype-input" class="form-control form-select">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch" selected>Lunch</option>
+                <option value="snack">Evening Snack</option>
+                <option value="dinner">Dinner</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="App.addFoodLogFromSelection()" style="margin-top:14px;">
+            + Add to Daily Food Log
+          </button>
+        </div>
+
+        <h4 style="margin-bottom:10px; font-size:1rem;">Today's Logged Foods</h4>
+        <div id="food-log-today-list">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 8: WATER TRACKER                                        -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-water">
+      <div style="max-width: 500px; margin: 0 auto; text-align: center;">
+        <div class="section-header">
+          <h2 class="section-title" style="justify-content:center;">💧 Daily Hydration Tracker</h2>
+          <p class="section-subtitle">Maintaining optimal cellular hydration for metabolism and mobility.</p>
+        </div>
+
+        <!-- Animated Hydration Ring -->
+        <div style="position:relative; width:220px; height:220px; margin: 20px auto;">
+          <svg viewBox="0 0 160 160" style="width:100%; height:100%; transform:rotate(-90deg);">
+            <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="12"></circle>
+            <circle id="water-svg-circle" cx="80" cy="80" r="70" fill="none" stroke="#06b6d4" stroke-width="12" stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="440" style="transition: stroke-dashoffset 0.6s ease; filter:drop-shadow(0 0 10px #06b6d4);"></circle>
+          </svg>
+          <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
+            <div style="font-size:2rem; font-weight:800; font-family:var(--font-heading);" id="water-screen-amount">0 ml</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary);">Target: <span id="water-screen-target">2,800</span> ml</div>
+            <div style="font-size:0.75rem; color:var(--accent-lime); margin-top:4px;"><span id="water-screen-remain">2,800</span> ml to go</div>
+          </div>
+        </div>
+
+        <!-- Quick Add Buttons -->
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="App.addWaterQuick(150)">+150 ml (Cup)</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.addWaterQuick(250)">+250 ml (Glass)</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.addWaterQuick(500)">+500 ml (Bottle)</button>
+        </div>
+
+        <div class="glass-card" style="margin-bottom:24px; text-align:left;">
+          <div style="display:flex; gap:10px;">
+            <input type="number" id="water-custom-input" class="form-control" placeholder="Custom amount in ml (e.g. 350)">
+            <button class="btn btn-primary" onclick="App.addWaterCustom()">Add</button>
+          </div>
+        </div>
+
+        <h4 style="text-align:left; font-size:1rem; margin-bottom:12px;">Today's Intake Timeline</h4>
+        <div id="water-logs-list" style="text-align:left;">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 9: SATHI AI CHATBOT — SHOWSTOPPER FUTURISTIC UI         -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-sathi">
+      <div class="sathi-container">
+        <!-- Aurora Waves Background -->
+        <div class="sathi-aurora-bg">
+          <div class="sathi-aurora-wave wave-1"></div>
+          <div class="sathi-aurora-wave wave-2"></div>
+          <div class="sathi-aurora-wave wave-3"></div>
+        </div>
+
+        <!-- SATHI Brand Header -->
+        <div class="sathi-header">
+          <div class="sathi-brand">
+            <div class="sathi-orb">
+              <svg class="sathi-orb-face" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V17a1 1 0 0 1-2 0v-.07A7.003 7.003 0 0 1 5.07 11H5a1 1 0 0 1 0-2h.07A7.003 7.003 0 0 1 11 3.07V3a1 1 0 0 1 2 0v.07A7.003 7.003 0 0 1 18.93 9H19a1 1 0 0 1 0 2h-.07A7.003 7.003 0 0 1 13 16.93z"/></svg>
+            </div>
+            <div class="sathi-meta">
+              <h3>SATHI ✨</h3>
+              <p>Your AI Wellness Buddy</p>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="sathi-status-pill">
+              <div class="status-dot-pulse"></div>
+              <span>Online</span>
+            </div>
+            <!-- Mode Selector -->
+            <div class="sathi-mode-selector">
+              <button class="mode-btn active" onclick="switchSathiMode('companion', this)">All-in-One</button>
+              <button class="mode-btn" onclick="switchSathiMode('dietitian', this)">Dietitian</button>
+              <button class="mode-btn" onclick="switchSathiMode('fitness', this)">Fitness</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Conversation Area -->
+        <div class="sathi-messages-pane" id="sathi-messages">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="sathi-typing" style="display:none; margin: 0 20px 10px 20px;">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <span style="font-size:0.75rem; color:#cbd5e1; margin-left:6px;">SATHI is thinking...</span>
+        </div>
+
+        <!-- Interactive Quick Action Cards -->
+        <div class="sathi-quick-actions-bar">
+          <div class="sathi-action-chip" data-query="How do I correct my form in Warrior II pose?">
+            🧘 Yoga Coach
+          </div>
+          <div class="sathi-action-chip" data-query="My maintenance is 2,400 calories. What is a 350-calorie deficit?">
+            🔥 Calorie Calculator
+          </div>
+          <div class="sathi-action-chip" data-query="Suggest a 500-calorie high-protein Indian vegetarian lunch.">
+            🥗 AI Dietitian
+          </div>
+          <div class="sathi-action-chip" data-query="Can I replace paneer with tofu for fat loss?">
+            ⚖️ Paneer vs Tofu
+          </div>
+          <div class="sathi-action-chip" data-query="How many calories and protein are in two rotis and a bowl of dal?">
+            🍲 Roti & Dal Macros
+          </div>
+          <div class="sathi-action-chip" data-query="How much water should I drink today based on my workout?">
+            💧 Hydration Goal
+          </div>
+        </div>
+
+        <!-- Message Input Bar -->
+        <div class="sathi-input-bar">
+          <div class="sathi-input-wrapper">
+            <input type="text" id="sathi-input-field" class="sathi-input" placeholder="Ask SATHI anything about yoga, diet, or calories...">
+            <button class="btn btn-secondary btn-sm" id="btn-voice-input" onclick="toggleVoiceInput()" style="background:transparent; border:none; color:#f472b6; padding:4px 8px; font-size:1.1rem; cursor:pointer;" title="Voice Input">
+              🎙️
+            </button>
+            <button class="btn-send-sathi" onclick="App.sendSathiMessage()" title="Send Message">
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 10: PROGRESS ANALYTICS                                  -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-progress">
+      <div class="section-header">
+        <h2 class="section-title">📈 Fitness & Body Analytics</h2>
+        <p class="section-subtitle">Real metrics, adherence streaks, and long-term trends.</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="glass-card" style="text-align:center;">
+          <div style="font-size:2rem; font-weight:800; color:var(--accent-lime);">7 Days</div>
+          <div style="font-size:0.8rem; color:var(--text-secondary);">Active Streak 🔥</div>
+        </div>
+        <div class="glass-card" style="text-align:center;">
+          <div style="font-size:2rem; font-weight:800; color:var(--accent-teal);">94%</div>
+          <div style="font-size:0.8rem; color:var(--text-secondary);">Avg Yoga Accuracy 🧘</div>
+        </div>
+        <div class="glass-card" style="text-align:center;">
+          <div style="font-size:2rem; font-weight:800; color:#ec4899;">18/20</div>
+          <div style="font-size:0.8rem; color:var(--text-secondary);">Weekly Workouts Done ✨</div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:20px;">
+        <h3 style="font-size:1.1rem; margin-bottom:12px;">🏆 Earned Fitness Badges</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div style="background:rgba(255,255,255,0.06); padding:10px 16px; border-radius:var(--radius-md); border:1px solid rgba(16,231,89,0.3); font-size:0.85rem;">
+            🥇 <strong>Yoga Posture Master</strong><br><span style="font-size:0.75rem; color:var(--text-secondary);">Held Warrior II for 45s with 95%+ accuracy</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); padding:10px 16px; border-radius:var(--radius-md); border:1px solid rgba(6,182,212,0.3); font-size:0.85rem;">
+            💧 <strong>Hydration Champion</strong><br><span style="font-size:0.75rem; color:var(--text-secondary);">Hit 2,800ml daily target 5 days in a row</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); padding:10px 16px; border-radius:var(--radius-md); border:1px solid rgba(168,85,247,0.3); font-size:0.85rem;">
+            🥗 <strong>Macro Consistent</strong><br><span style="font-size:0.75rem; color:var(--text-secondary);">Logged all 5 meals within calorie targets</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- SCREEN 11: USER PROFILE & SETTINGS                             -->
+    <!-- ============================================================== -->
+    <section class="screen-container app-screen" id="screen-profile">
+      <div style="max-width: 550px; margin: 0 auto;">
+        <div class="glass-card" style="text-align:center; padding:30px 20px; margin-bottom:20px;">
+          <div class="avatar-circle" style="width:64px; height:64px; font-size:1.5rem; margin:0 auto 12px auto;">
+            ✨
+          </div>
+          <h2 style="font-size:1.4rem;" id="prof-name">Alex Rivera</h2>
+          <p style="color:var(--text-secondary); font-size:0.88rem;" id="prof-email">demo@fitaicoach.app</p>
+          <div style="display:inline-block; margin-top:8px; padding:3px 12px; border-radius:var(--radius-full); background:rgba(16,231,89,0.15); color:var(--accent-lime); font-size:0.75rem; font-weight:700;" id="prof-goal">
+            FAT LOSS & TONING
+          </div>
+        </div>
+
+        <div class="glass-card" style="margin-bottom:20px;">
+          <h4 style="font-size:1.05rem; margin-bottom:14px;">App Settings & Preferences</h4>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+            <span>Edit Personalized Fitness Profile</span>
+            <button class="btn btn-secondary btn-sm" onclick="App.navigateTo('onboarding')">Edit Profile</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+            <span>Daily Hydration Reminders</span>
+            <button class="btn btn-secondary btn-sm" onclick="Water.requestReminderPermission().then(r => App.showToast(r.status === 'granted' ? 'Hydration reminders enabled!' : 'Permission: ' + r.status))">Enable</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+            <span>Install Progressive Web App (PWA)</span>
+            <button class="btn btn-primary btn-sm" onclick="App.triggerPWAInstall()">Install PWA</button>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary btn-block" style="border-color:rgba(239,68,68,0.4); color:#f87171;" onclick="Auth.signOut()">
+          🚪 Sign Out
+        </button>
+      </div>
+    </section>
+
+    <!-- Bottom Mobile Navigation Bar -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <div class="nav-item active" data-screen="dashboard">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" data-screen="yoga">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="3"/><path d="M12 8v8m-4-4h8m-6 8l2-4 2 4"/></svg>
+        <span>Yoga</span>
+      </div>
+      <div class="nav-item" data-screen="nutrition">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        <span>Nutrition</span>
+      </div>
+      <div class="nav-item nav-sathi" data-screen="sathi">
+        <div class="sathi-nav-orb">
+          <svg viewBox="0 0 24 24" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span>SATHI ✨</span>
+      </div>
+      <div class="nav-item" data-screen="workouts">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Workouts</span>
+      </div>
+      <div class="nav-item" data-screen="profile">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </div>
+    </nav>
+
+    <!-- Session Summary Modal -->
+    <div class="modal-overlay" id="modal-session-summary">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 style="font-size:1.25rem; color:var(--accent-lime);">🎉 Workout Completed!</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">
+          Outstanding effort! Here is your AI session analysis:
+        </p>
+        <div class="grid-2" style="margin-bottom:20px;">
+          <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:var(--radius-md); text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Session Duration</div>
+            <strong style="font-size:1.2rem;" id="summary-duration">5m 30s</strong>
+          </div>
+          <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:var(--radius-md); text-align:center;">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Est. Calories Burned</div>
+            <strong style="font-size:1.2rem; color:var(--accent-lime);" id="summary-calories">42 kcal</strong>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05); padding:14px; border-radius:var(--radius-md); text-align:center; margin-bottom:20px;">
+          <div style="font-size:0.8rem; color:var(--text-muted);">MediaPipe Pose Alignment Accuracy</div>
+          <div style="font-size:2rem; font-weight:800; color:var(--accent-teal);" id="summary-accuracy">94%</div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;" id="summary-pose-name">Warrior II Pose</div>
+        </div>
+        <button class="btn btn-primary btn-block btn-modal-close" onclick="App.navigateTo('dashboard')">
+          Return to Dashboard
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+  </div>
+
+  <!-- Optional Client Configuration (Supabase credentials) -->
+  <script src="config.js" onerror="/* optional config */"></script>
+
+  <!-- Application Logic Modules (Unified bundle + modular fallbacks) -->
+  <script src="script.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/calories.js"></script>
+  <script src="js/nutrition.js"></script>
+  <script src="js/water.js"></script>
+  <script src="js/workouts.js"></script>
+  <script src="js/pose.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Inline Helper Event Handlers for Auth and Tabs -->
+  <script>
+    let authMode = 'login';
+
+    function toggleAuthTab(mode) {
+      authMode = mode;
+      document.querySelectorAll('#screen-auth .tab-pill').forEach(p => p.classList.remove('active'));
+      document.getElementById(`tab-auth-${mode}`).classList.add('active');
+
+      const nameGroup = document.getElementById('group-auth-name');
+      const passGroup = document.getElementById('group-auth-password');
+      const submitBtn = document.getElementById('btn-auth-submit');
+
+      if (mode === 'signup') {
+        nameGroup.style.display = 'block';
+        passGroup.style.display = 'block';
+        submitBtn.textContent = 'Create Account';
+      } else if (mode === 'reset') {
+        nameGroup.style.display = 'none';
+        passGroup.style.display = 'none';
+        submitBtn.textContent = 'Send Password Reset Link';
+      } else {
+        nameGroup.style.display = 'none';
+        passGroup.style.display = 'block';
+        submitBtn.textContent = 'Sign In';
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-password').value;
+      const name = document.getElementById('auth-name').value;
+
+      try {
+        if (authMode === 'signup') {
+          await Auth.signUp(email, pass, name);
+          App.showToast('Account created successfully! Let’s personalize your plan.');
+          App.navigateTo('onboarding');
+        } else if (authMode === 'reset') {
+          await Auth.resetPassword(email);
+          App.showToast('Password reset link sent to your email.');
+        } else {
+          await Auth.signIn(email, pass);
+          App.showToast('Welcome back to FitAI Coach!');
+          App.navigateTo('dashboard');
+        }
+      } catch (err) {
+        App.showToast(err.message, 'error');
+      }
+    }
+
+    function handleOnboardingSubmit(e) {
+      e.preventDefault();
+      const profile = {
+        name: document.getElementById('ob-name').value || 'Athlete',
+        age: parseInt(document.getElementById('ob-age').value) || 26,
+        sex: document.getElementById('ob-sex').value || 'male',
+        activity_level: document.getElementById('ob-activity').value || 'moderate',
+        height: parseFloat(document.getElementById('ob-height').value) || 175,
+        weight: parseFloat(document.getElementById('ob-weight').value) || 70,
+        target_weight: parseFloat(document.getElementById('ob-target-weight').value) || 68,
+        fitness_goal: document.getElementById('ob-goal').value || 'fat_loss',
+        dietary_preference: document.getElementById('ob-diet').value || 'vegetarian',
+        daily_duration: parseInt(document.getElementById('ob-duration').value) || 30,
+        health_limitations: document.getElementById('ob-limitations').value || '',
+        onboardingComplete: true
+      };
+
+      Auth.saveProfile(profile);
+      App.showToast('Profile saved! Generating your custom 7-day program.');
+      App.navigateTo('dashboard');
+    }
+
+    function switchNutriTab(tabName, btn) {
+      document.querySelectorAll('#screen-nutrition .tab-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('nutri-tab-calc').style.display = tabName === 'calc' ? 'block' : 'none';
+      document.getElementById('nutri-tab-mealplan').style.display = tabName === 'mealplan' ? 'block' : 'none';
+      document.getElementById('nutri-tab-foodlog').style.display = tabName === 'foodlog' ? 'block' : 'none';
+    }
+
+    function switchSathiMode(mode, btn) {
+      document.querySelectorAll('.sathi-mode-selector .mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      SathiChat.setMode(mode);
+      App.showToast(`Switched SATHI mode to ${mode.toUpperCase()}`);
+    }
+
+    function updateDayPill(btn) {
+      document.querySelectorAll('#workout-day-pills .tab-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function toggleVoiceInput() {
+      const btn = document.getElementById('btn-voice-input');
+      const isStarted = SathiChat.startVoiceRecording((transcript) => {
+        const input = document.getElementById('sathi-input-field');
+        if (input) input.value = transcript;
+        App.sendSathiMessage();
+      }, () => {
+        if (btn) btn.style.color = '#f472b6';
+      });
+
+      if (isStarted && btn) {
+        btn.style.color = '#10e759';
+        App.showToast('Listening... Speak now!');
+      }
+    }
+  </script>
+</body>
+</html>

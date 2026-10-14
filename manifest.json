@@ -1,0 +1,24 @@
+{
+  "name": "FitAI Coach — AI Yoga, Fitness & Nutrition",
+  "short_name": "FitAI Coach",
+  "description": "Mobile-First AI Fitness, Live Yoga Camera Tracking, Nutrition Planner and SATHI AI Chatbot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2310b981'/><stop offset='100%' stop-color='%2306b6d4'/></linearGradient></defs><rect width='512' height='512' rx='128' fill='%230d1117'/><circle cx='256' cy='256' r='200' fill='none' stroke='url(%23g)' stroke-width='32'/><path d='M256 120 L256 392 M180 220 L332 220 M190 320 L322 320' stroke='%2310e759' stroke-width='36' stroke-linecap='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2310b981'/><stop offset='100%' stop-color='%2306b6d4'/></linearGradient></defs><rect width='512' height='512' rx='128' fill='%230d1117'/><circle cx='256' cy='256' r='200' fill='none' stroke='url(%23g)' stroke-width='32'/><path d='M256 120 L256 392 M180 220 L332 220 M190 320 L322 320' stroke='%2310e759' stroke-width='36' stroke-linecap='round'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

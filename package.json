@@ -1,0 +1,27 @@
+{
+  "name": "fitai-coach",
+  "version": "1.0.0",
+  "description": "FitAI Coach — Mobile-First AI Yoga, Fitness & Nutrition Platform with SATHI AI Companion",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "keywords": [
+    "ai",
+    "fitness",
+    "yoga",
+    "mediapipe",
+    "nutrition",
+    "calorie-calculator",
+    "chatbot",
+    "sathi"
+  ],
+  "author": "FitAI Coach Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0"
+  }
+}
